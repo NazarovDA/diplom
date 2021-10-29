@@ -13,20 +13,61 @@ import android.support.v4.content.ContextCompat
 import android.widget.Toast
 
 import android.location.LocationListener
+import android.telephony.*
 import android.widget.Button
 import android.widget.TextView
+import kotlinx.serialization.*
 
-import android.telephony.CellInfo
-import android.telephony.TelephonyManager
 
-data class SignalInfo (
-        val type: String,
-        val operator: Pair<String, String>
-        
-    ) {
-    val connection = type // тип подключения 
-    val operatorInfo: Pair<String, String> = operator
+@Serializable
+data class SignalInfo (val nwt: CellInfo, val opNum: String, val opTxt: String, val loc: Location) {
     
+    val type = when (nwt.javaClass) {
+        CellInfoLte::class.java -> ("LTE")
+        CellInfoGsm::class.java -> ("GSM")
+        CellInfoCdma::class.java -> ("CDMA")
+        CellInfoNr::class.java -> ("Nr")
+        CellInfoTdscdma::class.java -> ("TDSCMA")
+        CellInfoWcdma::class.java -> ("WCDMA")
+        else -> ("Underfined")
+    }
+    
+    val connectionStatus = when (nwt.cellConnectionStatus) {
+        CellInfo.CONNECTION_NONE -> "NONE"
+        CellInfo.CONNECTION_PRIMARY_SERVING -> "PRIMARY_SERVING"
+        CellInfo.CONNECTION_SECONDARY_SERVING -> "SECONDARY_SERVING"
+        else -> "UNKNOWN"
+    }
+    
+    val opetatorAlphaShort = nwt.cellIdentity.operatorAlphaShort
+    val operatorAlphaLong = nwt.cellIdentity.operatorAlphaLong
+    
+    val signalLevel = when (nwt.cellSignalStrength.level) {
+        1 -> "POOR"
+        2 -> "MODERATE"
+        3 -> "GOOD"
+        4 -> "GREAT"
+        else -> "UNKNOWN"
+    }
+    
+    val asu = nwt.cellSignalStrength.asuLevel
+    val dbm = nwt.cellSignalStrength.dbm
+    
+    val isRegistered = nwt.isRegistered
+
+    val longitude = loc.longitude
+    val latitude = loc.latitude
+
+    override fun toString(): String {
+        return "Тип подключения: $type\n" +
+            "Местоположение: $longitude $latitude\n" +
+            "Статус подключения: $connectionStatus\n" +
+            "Информация об операторе: $operatorAlphaLong  $opetatorAlphaShort\n  " +
+            "$opNum  $opTxt\n" +
+            "Уровень сигнала: $signalLevel\n" +
+            "ASU = $asu\n" +
+            "DBM = $dbm"
+    }
 }
 
 
@@ -34,17 +75,15 @@ data class SignalInfo (
 class MainActivity : AppCompatActivity(), LocationListener {
     
     private lateinit var locationManager: LocationManager
-    private lateinit var tvGpsLocation: TextView
     private val locationPermissionCode = 2
     
-    private lateinit var cellInfo: CellInfo
     private lateinit var telephonyManager: TelephonyManager
     private lateinit var info: TextView
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        title = "KotlinApp"
+        title = "Ya ustal build n2"
         val button: Button = findViewById(R.id.getLocation)
         button.setOnClickListener {
             getLocation()
@@ -63,50 +102,35 @@ class MainActivity : AppCompatActivity(), LocationListener {
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION
                 ), locationPermissionCode)
         }
-        
+        telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         locationManager.requestLocationUpdates(
             LocationManager.GPS_PROVIDER,
             5000,
             5f,
             this
         )
-        
-        telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        
+    }
+
+    @SuppressLint("SetTextI18n")
+    override fun onLocationChanged(location: Location) {
+
+        info = findViewById(R.id.SignalData)
         val allCells = telephonyManager.allCellInfo
         val operatorNumeric = telephonyManager.networkOperator // numeric name MCC+MNC
         val operatorText = telephonyManager.networkOperatorName // string variation of name
-       
+
         if (allCells!=null) {
-            val nwt = allCells[0]
-            
-            val signalStrength = nwt.cellSignalStrength
-            info = findViewById(R.id.SignalData)
-            
-            val level = when (signalStrength.level) {
-                4 -> "Great"
-                3 -> "Good"
-                2 -> "Moderate"
-                1 -> "Poor"
-                else -> "None or Unknown"
+            var cells = mutableListOf<SignalInfo>()
+            for (cell in allCells) {
+                if (cell != null) {
+                    cells.add(SignalInfo(cell, operatorNumeric, operatorText, location))
+                }
+                if (allCells.indexOf(cell) == 0) {
+                    info.text = cells[0].toString()
+                }
             }
-            val cellIdentityLte = nwt.cellIdentity.toString()
-            
-            info.text = "operator: $operatorText/$operatorNumeric \n" +
-                "level: ${level}\n" +
-                "asu: ${signalStrength.asuLevel}\n" +
-                "dbm: ${signalStrength.dbm}\n" +
-                "timestamp: ${nwt.timestampMillis}\n" +
-                cellIdentityLte
         }
     }
-    
-    @SuppressLint("SetTextI18n")
-    override fun onLocationChanged(location: Location) {
-        tvGpsLocation = findViewById(R.id.textView)
-        tvGpsLocation.text = "Latitude: ${location.latitude}\nLongitude: ${location.longitude}"
-    }
-    
     
     override fun onRequestPermissionsResult(
         requestCode: Int,

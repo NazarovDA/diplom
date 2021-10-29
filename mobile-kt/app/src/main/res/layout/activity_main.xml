@@ -6,43 +6,35 @@
     android:padding="4dp"
     tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="70dp"
-        android:background="#008080"
-        android:padding="5dp"
-        android:text="Test App"
-        android:textColor="#fff"
-        android:textSize="24sp" />
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="Current GPS Location"
-        android:textSize="24sp" />
-
     <Button
         android:id="@+id/getLocation"
-        android:layout_width="wrap_content"
+        android:layout_width="156dp"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/text"
-        android:layout_centerInParent="true"
-        android:layout_marginTop="40dp"
-        android:text="Get location" />
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="129dp"
+        android:layout_marginTop="244dp"
+        android:layout_marginEnd="130dp"
+        android:text="Get Info" />
 
     <TextView
         android:id="@+id/SignalData"
-        android:layout_width="407dp"
-        android:layout_height="269dp"
-        android:layout_alignBottom="@+id/textView"
+        android:layout_width="399dp"
+        android:layout_height="296dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginStart="0dp"
-        android:layout_marginEnd="0dp"
-        android:layout_marginBottom="-349dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="3dp"
+        android:layout_marginEnd="13dp"
+        android:layout_marginBottom="31dp"
         android:text="CurrentSignalData" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="163dp"
+        android:layout_height="111dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="121dp"
+        android:text="TestApp" />
 </RelativeLayout>
